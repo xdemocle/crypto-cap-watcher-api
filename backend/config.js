@@ -1,6 +1,6 @@
 // Options for db
 const dbOpts = {
-  url: 'mongodb://localhost:27017/crypto-cap-watcher-db',
+  url: process.env.MONGODB_URI || 'mongodb://localhost:27017/crypto-cap-watcher-db',
   decorate: true
 };
 
