@@ -1,0 +1,21 @@
+{
+  "name": "crypto-cap-watcher-api",
+  "version": "1.0.0",
+  "description": "Crypto Cap Watcher API",
+  "author": "Rocco <im@rocco.me>",
+  "scripts": {
+    "start": "./node_modules/.bin/nodemon index.js",
+    "debug": "node --nolazy --inspect-brk=9229 index.js"
+  },
+  "dependencies": {
+    "hapi": "^17.2.0",
+    "hapi-mongodb": "^7.1.0"
+  },
+  "engines": {
+    "node": ">=8.9.0",
+    "npm": ">= 3.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^1.14.11"
+  }
+}
