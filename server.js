@@ -6,7 +6,7 @@ const remoteData = require('./backend/remote-data');
 
 // Create a server with a host and port
 const server = Hapi.server({
-  host: 'localhost',
+  host: '0.0.0.0',
   port: process.env.PORT || 5000,
   routes: {
     cors: true
