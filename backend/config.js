@@ -19,6 +19,7 @@ const timing = [5, 15, 30, 60, 180, 360, 720, 1440, 2880, 4320, 10080, 20160];
 module.exports = {
   dbOpts,
   checkEachMinutes,
+  checkEachMinutesClient,
   collections,
   coinmarketcapUrl,
   timing
