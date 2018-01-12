@@ -1,53 +1,109 @@
 const https = require('https');
 const MongoClient = require('mongodb').MongoClient;
+const _ = require('lodash');
 const assert = require('assert');
+const Promise = require('promise');
 const config = require('./config');
 const utils = require('./utils');
 const database = require('./database');
 
-function makeSchema(response, histories) {
-  return {
-    id: 1,
-    last_updated: response.last_updated,
-    total_market_cap: response.total_market_cap_usd,
-    total_24h_volume: response.total_24h_volume_usd,
-    bitcoin_percentage: response.bitcoin_percentage_of_market_cap,
-    active_currencies: response.active_currencies,
-    active_assets: response.active_assets,
-    active_markets: response.active_markets,
-    history: makeHistoryWrapper(response, histories)
-  };
+function makeSchema(response, callback) {
+  return new Promise(function (resolve, reject) {
+    makeHistoryWrapper(response).then((newHistoryWrapper) => {
+      const mainObject = {
+        id: 1,
+        last_updated: response.last_updated,
+        total_market_cap: response.total_market_cap_usd,
+        total_24h_volume: response.total_24h_volume_usd,
+        bitcoin_percentage: response.bitcoin_percentage_of_market_cap,
+        active_currencies: response.active_currencies,
+        active_assets: response.active_assets,
+        active_markets: response.active_markets,
+        history: newHistoryWrapper
+      };
+
+      resolve(mainObject);
+    });
+  });
 }
 
-function makeHistoryWrapper(response, histories) {
+function makeHistoryWrapper(response) {
+  const history = [];
 
-  let history = [];
+  return new Promise(function (resolve, reject) {
 
-  config.timing.forEach(element => {
+    const countTimings = config.timing.length;
+    let pointer = 1;
 
-    let newStat = {
-      id: element,
+    _.each(config.timing, (timing, index) => {
 
-      total_market_cap: response.total_market_cap_usd,
-      total_market_cap_arrow: 'up',
-      total_market_cap_perc: '30',
+      getHistoryDocuments(response.last_updated, timing, (docs) => {
 
-      total_24h_volume: response.total_24h_volume_usd,
-      total_24h_volume_arrow: 'down',
-      total_24h_volume_perc: '30',
+        const averages = calculateAverages(response, docs);
 
-      bitcoin_percentage: response.bitcoin_percentage_of_market_cap,
-      bitcoin_percentage_arrow: 'down',
-      bitcoin_percentage_perc: '30'
-    }
+        // TODO: calculate averages
+        let newStat = {
+          id: timing,
 
-    history.push(newStat);
+          total_market_cap: averages.total_market_cap,
+          total_market_cap_arrow: averages.total_market_cap_arrow,
+          total_market_cap_perc: averages.total_market_cap_perc,
+
+          total_24h_volume: averages.total_24h_volume,
+          total_24h_volume_arrow: averages.total_24h_volume_arrow,
+          total_24h_volume_perc: averages.total_24h_volume_perc,
+
+          bitcoin_percentage: averages.bitcoin_percentage,
+          bitcoin_percentage_arrow: averages.bitcoin_percentage_arrow,
+          bitcoin_percentage_perc: averages.bitcoin_percentage_perc
+        }
+
+        history.push(newStat);
+
+        if (pointer >= countTimings) {
+          resolve(history);
+        }
+
+        pointer++;
+      });
+    });
+  });
+}
+
+function calculateAverages(lastDoc, docsHistory) {
+
+  let averages = {
+    total_market_cap: 0,
+    total_24h_volume: 0,
+    bitcoin_percentage: 0
+  };
+
+  const countImports = docsHistory.length;
+
+  _.each(docsHistory, (item) => {
+    averages.total_market_cap += item.total_market_cap_usd;
+    averages.total_24h_volume += item.total_24h_volume_usd;
+    averages.bitcoin_percentage += item.bitcoin_percentage_of_market_cap;
   });
 
-  return history;
+  averages.total_market_cap = averages.total_market_cap / countImports;
+  averages.total_24h_volume = averages.total_24h_volume / countImports;
+  averages.bitcoin_percentage = utils.roundNumber(averages.bitcoin_percentage / countImports, 2);
+
+  // Calculate percentuals
+  averages.total_market_cap_perc = utils.calculatePercetual(lastDoc.total_market_cap_usd, averages.total_market_cap, 2);
+  averages.total_24h_volume_perc = utils.calculatePercetual(lastDoc.total_24h_volume_usd, averages.total_24h_volume, 2);
+  averages.bitcoin_percentage_perc = utils.calculatePercetual(lastDoc.bitcoin_percentage_of_market_cap, averages.bitcoin_percentage, 2);
+
+  // Calculate arrows
+  averages.total_market_cap_arrow = utils.calculateArrow(lastDoc.total_market_cap_usd, averages.total_market_cap);
+  averages.total_24h_volume_arrow = utils.calculateArrow(lastDoc.total_24h_volume_usd, averages.total_24h_volume);
+  averages.bitcoin_percentage_arrow = utils.calculateArrow(lastDoc.bitcoin_percentage_of_market_cap, averages.bitcoin_percentage);
+
+  return averages;
 }
 
-function findDocumentAndUpdate(db, response, callback) {
+function findDocumentAndUpdate(db, response) {
   // Get the documents collection
   const collection = db.collection(config.collections.statistics);
 
@@ -62,13 +118,13 @@ function findDocumentAndUpdate(db, response, callback) {
         console.log('Statistics query executed:', dbAnswer.result);
       };
 
-      getHistoryDocuments((histories) => {
+      makeSchema(response).then((newObject) => {
         if (action === 'insertOne') {
           // Insert the stat document
-          collection.insertOne(makeSchema(response, histories), callback);
+          collection.insertOne(newObject, callback);
         } else {
           // Update the stat document
-          collection.updateOne({id: 1}, {$set: makeSchema(response, histories)},
+          collection.updateOne({id: 1}, {$set: newObject},
             callback);
         }
       });
@@ -78,7 +134,7 @@ function findDocumentAndUpdate(db, response, callback) {
   });
 }
 
-function saveNewHistoryDocument(db, response, callback) {
+function saveNewHistoryDocument(db, response) {
   // Get the documents collection
   const collection = db.collection(config.collections.history);
 
@@ -106,8 +162,23 @@ function updateData(response) {
   });
 }
 
-function getHistoryDocuments() {
+function getHistoryDocuments(last_updated, minutes, callback) {
+  // Query for minutes ago (from now)
+  const query = {
+    last_updated: {
+      $gte: last_updated - 60 * minutes
+    }
+  };
 
+  // Use connect method to connect to the server
+  database.connect((db) => {
+    // Get the documents collection
+    const collection = db.collection(config.collections.history);
+
+    collection.find(query).toArray((err, docs) => {
+      callback(docs);
+    });
+  });
 }
 
 module.exports = {

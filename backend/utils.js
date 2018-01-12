@@ -62,8 +62,23 @@ function makeTimingLabels() {
   return timing;
 }
 
+function calculateArrow(current, average) {
+  return current > average ? 'up' : 'down';
+}
+
+function calculatePercetual(current, average, round) {
+  return roundNumber((current - average) / ((current + average) / 2) * 100, round);
+}
+
+function roundNumber(num, dec) {
+  return Math.round(num*Math.pow(10,dec))/Math.pow(10,dec);;
+}
+
 module.exports = {
-  ping,
+  calculateArrow,
+  calculatePercetual,
   makeLabel,
-  makeTimingLabels
+  makeTimingLabels,
+  ping,
+  roundNumber
 };

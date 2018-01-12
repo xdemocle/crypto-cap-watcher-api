@@ -10,7 +10,9 @@
   "dependencies": {
     "hapi": "^17.2.0",
     "hapi-mongodb": "^7.1.0",
-    "ping": "^0.2.2"
+    "lodash": "^4.17.4",
+    "ping": "^0.2.2",
+    "promise": "^8.0.1"
   },
   "engines": {
     "node": ">=8.9.0",
