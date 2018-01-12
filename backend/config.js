@@ -6,7 +6,10 @@ const dbOpts = {
 
 const checkEachMinutes = 5;
 
-const collection = 'statistics';
+const collections = {
+  statistics: 'statistics',
+  history: 'history'
+};
 
 const coinmarketcapUrl = 'https://api.coinmarketcap.com/v1/global/';
 
@@ -15,7 +18,7 @@ const timing = [5, 15, 30, 60, 180, 360, 720, 1440, 2880, 4320, 10080, 20160];
 module.exports = {
   dbOpts,
   checkEachMinutes,
-  collection,
+  collections,
   coinmarketcapUrl,
   timing
 };

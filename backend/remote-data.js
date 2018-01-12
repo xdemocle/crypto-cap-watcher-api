@@ -1,6 +1,7 @@
 const https = require('https');
 const config = require('./config');
 const localData = require('./local-data');
+const utils = require('./utils');
 
 function retrieveData() {
   https.get(config.coinmarketcapUrl, (res) => {
@@ -12,11 +13,14 @@ function retrieveData() {
 
     res.on('end', () => {
       const response = JSON.parse(body);
-      localData.updateCollection(response);
-      console.log('Got a response: ', response);
+      localData.updateData(response);
+      console.log('Got a response: Last Updated', response.last_updated);
     });
   }).on('error', (e) => {
-    console.log('Got an error: ', e);
+    console.log('Got an error in retrieving data: ', e.errno);
+    utils.ping(e.host, () => {
+      retrieveData();
+    });
   });
 }
 
@@ -25,9 +29,7 @@ function start() {
 
   const checkSecs = config.checkEachMinutes * 60 * 1000;
 
-  // const intervalObj = setInterval(() => {
   setInterval(() => {
-    // console.log('interviewing the interval');
     retrieveData();
   }, checkSecs);
 }

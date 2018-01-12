@@ -2,48 +2,10 @@ const https = require('https');
 const MongoClient = require('mongodb').MongoClient;
 const assert = require('assert');
 const config = require('./config');
+const utils = require('./utils');
+const database = require('./database');
 
-function makeLabel(element) {
-
-  let chunks = ['Changes ('];
-
-  if (element === 60) {
-    chunks.push(1);
-    chunks.push(' Hour)');
-  } else if (element > 10080) {
-    chunks.push(element / 60 / 24 / 7);
-    chunks.push(' Weeks)');
-  } else if (element > 1440) {
-    chunks.push(element / 60 / 24);
-    chunks.push(' Days)');
-  } else if (element >= 120) {
-    chunks.push(element / 60);
-    chunks.push(' Hours)');
-  } else {
-    chunks.push(element);
-    chunks.push(' Minutes)');
-  }
-
-  return chunks.join('');
-}
-
-function makeSchema(response) {
-  const makeTimingLabels = () => {
-    let timing = [];
-
-    config.timing.forEach(element => {
-      const item = {
-        id: element,
-        label: makeLabel(element),
-        visible: element > 1440 ? false : true
-      }
-
-      timing.push(item);
-    });
-
-    return timing;
-  }
-
+function makeSchema(response, histories) {
   return {
     id: 1,
     last_updated: response.last_updated,
@@ -53,14 +15,11 @@ function makeSchema(response) {
     active_currencies: response.active_currencies,
     active_assets: response.active_assets,
     active_markets: response.active_markets,
-    history: makeHistoryWrapper(response),
-    config: {
-      timing: makeTimingLabels()
-    }
+    history: makeHistoryWrapper(response, histories)
   };
 }
 
-function makeHistoryWrapper(response) {
+function makeHistoryWrapper(response, histories) {
 
   let history = [];
 
@@ -68,7 +27,6 @@ function makeHistoryWrapper(response) {
 
     let newStat = {
       id: element,
-      label: makeLabel(element),
 
       total_market_cap: response.total_market_cap_usd,
       total_market_cap_arrow: 'up',
@@ -89,41 +47,69 @@ function makeHistoryWrapper(response) {
   return history;
 }
 
-function findDocuments(db, response, callback) {
+function findDocumentAndUpdate(db, response, callback) {
   // Get the documents collection
-  const collection = db.collection(config.collection);
+  const collection = db.collection(config.collections.statistics);
 
-  // Find some documents
-  collection.findOneAndUpdate(
-    {
-      id: 1
-    },
-    {
-      $set: makeSchema(response)
-    },
-    {
-      returnOriginal: false,
-      // sort: [[a,1]],
-      upsert: true
-    }, (err) => {
-      assert.equal(null, err);
-      callback();
-    }
-  );
-}
-
-function updateCollection(response) {
-  // Use connect method to connect to the server
-  MongoClient.connect(config.dbOpts.url, (err, db) => {
+  // Check if last_update item is already present
+  collection.findOne({id: 1}, {}, (err, doc) => {
     assert.equal(null, err);
-    console.log('Connected successfully to server');
 
-    findDocuments(db, response, () => {
-      db.close();
-    });
+    if (!doc || (response.last_updated !== doc.last_updated)) {
+      const action = doc ? 'updateOne' : 'insertOne';
+      const callback = (err, dbAnswer) => {
+        assert.equal(null, err);
+        console.log('Statistics query executed:', dbAnswer.result);
+      };
+
+      getHistoryDocuments((histories) => {
+        if (action === 'insertOne') {
+          // Insert the stat document
+          collection.insertOne(makeSchema(response, histories), callback);
+        } else {
+          // Update the stat document
+          collection.updateOne({id: 1}, {$set: makeSchema(response, histories)},
+            callback);
+        }
+      });
+    } else {
+      console.log('Statistics query NOT executed: last_updated is the most recent');
+    }
   });
 }
 
+function saveNewHistoryDocument(db, response, callback) {
+  // Get the documents collection
+  const collection = db.collection(config.collections.history);
+
+  // Check if last_update item is already present
+  collection.findOne({last_updated: response.last_updated}, {}, (err, doc) => {
+    assert.equal(null, err);
+
+    if (!doc) {
+      // Insert a document
+      collection.insertOne(response, (err, dbAnswer) => {
+        assert.equal(null, err);
+        console.log('History query executed:', dbAnswer.result);
+      });
+    } else {
+      console.log('History query NOT executed: last_updated already present');
+    }
+  });
+}
+
+function updateData(response) {
+  // Use connect method to connect to the server
+  database.connect((db) => {
+    findDocumentAndUpdate(db, response);
+    saveNewHistoryDocument(db, response);
+  });
+}
+
+function getHistoryDocuments() {
+
+}
+
 module.exports = {
-  updateCollection
+  updateData
 };

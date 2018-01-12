@@ -2,6 +2,7 @@ const Hapi = require('hapi');
 const hapiMongodb = require('hapi-mongodb');
 const Boom = require('boom');
 const config = require('./backend/config');
+const utils = require('./backend/utils');
 const remoteData = require('./backend/remote-data');
 
 // Create a server with a host and port
@@ -39,18 +40,31 @@ async function start() {
 
 start();
 
-// Add the route
+// Add the statistics route
 server.route({
   method: 'GET',
-  path: `/${config.collection}`,
+  path: '/statistics',
   async handler(request) {
     const db = request.mongo.db;
+    const collection = config.collections.statistics;
 
     try {
-      const result = await db.collection(config.collection).findOne({ id: 1 });
+      const result = await db.collection(collection).findOne({ id: 1 });
       return result || { message: 'no statistics available' };
     } catch (err) {
       throw Boom.internal('Internal MongoDB error', err);
     }
+  }
+});
+
+// Add the app config route
+server.route({
+  method: 'GET',
+  path: '/settings',
+  async handler() {
+    return {
+      checkEachMinutes: config.checkEachMinutes,
+      timing: utils.makeTimingLabels()
+    };
   }
 });
