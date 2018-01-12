@@ -63,7 +63,7 @@ server.route({
   path: '/settings',
   async handler() {
     return {
-      checkEachMinutes: config.checkEachMinutes,
+      checkEachMinutes: config.checkEachMinutesClient,
       timing: utils.makeTimingLabels()
     };
   }

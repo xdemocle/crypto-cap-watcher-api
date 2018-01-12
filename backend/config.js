@@ -4,7 +4,8 @@ const dbOpts = {
   decorate: true
 };
 
-const checkEachMinutes = 5;
+const checkEachMinutes = 0.5;
+const checkEachMinutesClient = 2.5;
 
 const collections = {
   statistics: 'statistics',
