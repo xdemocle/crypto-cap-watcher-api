@@ -88,11 +88,11 @@ function calculateAverages(lastDoc, docsHistory) {
 
   averages.total_market_cap = averages.total_market_cap / countImports;
   averages.total_24h_volume = averages.total_24h_volume / countImports;
-  averages.bitcoin_percentage = utils.roundNumber(averages.bitcoin_percentage / countImports, 2);
+  averages.bitcoin_percentage = utils.roundNumber(averages.bitcoin_percentage / countImports, 3);
 
   // Calculate percentuals
-  averages.total_market_cap_perc = utils.calculatePercetual(lastDoc.total_market_cap_usd, averages.total_market_cap, 2);
-  averages.total_24h_volume_perc = utils.calculatePercetual(lastDoc.total_24h_volume_usd, averages.total_24h_volume, 2);
+  averages.total_market_cap_perc = utils.calculatePercetual(lastDoc.total_market_cap_usd, averages.total_market_cap, 3);
+  averages.total_24h_volume_perc = utils.calculatePercetual(lastDoc.total_24h_volume_usd, averages.total_24h_volume, 3);
   averages.bitcoin_percentage_perc = utils.calculatePercetual(lastDoc.bitcoin_percentage_of_market_cap, averages.bitcoin_percentage, 2);
 
   // Calculate arrows
@@ -103,7 +103,7 @@ function calculateAverages(lastDoc, docsHistory) {
   return averages;
 }
 
-function findDocumentAndUpdate(db, response) {
+function findDocumentAndUpdate(db, response, callback) {
   // Get the documents collection
   const collection = db.collection(config.collections.statistics);
 
@@ -113,7 +113,7 @@ function findDocumentAndUpdate(db, response) {
 
     if (!doc || (response.last_updated !== doc.last_updated)) {
       const action = doc ? 'updateOne' : 'insertOne';
-      const callback = (err, dbAnswer) => {
+      const logCallback = (err, dbAnswer) => {
         assert.equal(null, err);
         console.log('Statistics query executed:', dbAnswer.result);
       };
@@ -121,14 +121,15 @@ function findDocumentAndUpdate(db, response) {
       makeSchema(response).then((newObject) => {
         if (action === 'insertOne') {
           // Insert the stat document
-          collection.insertOne(newObject, callback);
+          collection.insertOne(newObject, logCallback);
         } else {
           // Update the stat document
-          collection.updateOne({id: 1}, {$set: newObject},
-            callback);
+          collection.updateOne({id: 1}, {$set: newObject}, logCallback);
         }
+        callback();
       });
     } else {
+      callback();
       console.log('Statistics query NOT executed: last_updated is the most recent');
     }
   });
@@ -157,8 +158,9 @@ function saveNewHistoryDocument(db, response) {
 function updateData(response) {
   // Use connect method to connect to the server
   database.connect((db) => {
-    findDocumentAndUpdate(db, response);
-    saveNewHistoryDocument(db, response);
+    findDocumentAndUpdate(db, response, () => {
+      saveNewHistoryDocument(db, response);
+    });
   });
 }
 
@@ -176,8 +178,18 @@ function getHistoryDocuments(last_updated, minutes, callback) {
     const collection = db.collection(config.collections.history);
 
     collection.find(query).toArray((err, docs) => {
-      callback(docs);
+      if (!docs.length && minutes === 5) {
+        getHistoryLastDocument(collection, callback);
+      } else {
+        callback(docs);
+      }
     });
+  });
+}
+
+function getHistoryLastDocument(collection, callback) {
+  const lastDoc = collection.find().sort({_id:-1}).limit(1).toArray((err, docs) => {
+    callback(docs);
   });
 }
 
