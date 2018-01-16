@@ -179,7 +179,7 @@ function getHistoryDocuments(last_updated, minutes, callback) {
     // Get the documents collection
     const collection = db.collection(config.collections.history);
 
-    collection.find(query).sort({_id:-1}).limit(limit).toArray((err, docs) => {
+    collection.find(query).limit(limit).toArray((err, docs) => {
       if (!docs.length && minutes === 5) {
         getHistoryLastDocument(collection, {limit: 1}, callback);
       } else {
