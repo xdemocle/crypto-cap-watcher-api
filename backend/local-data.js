@@ -172,14 +172,16 @@ function getHistoryDocuments(last_updated, minutes, callback) {
     }
   };
 
+  const limit = minutes > 30 ? 2 : 1;
+
   // Use connect method to connect to the server
   database.connect((db) => {
     // Get the documents collection
     const collection = db.collection(config.collections.history);
 
-    collection.find(query).toArray((err, docs) => {
+    collection.find(query).sort({_id:-1}).limit(limit).toArray((err, docs) => {
       if (!docs.length && minutes === 5) {
-        getHistoryLastDocument(collection, callback);
+        getHistoryLastDocument(collection, {limit: 1}, callback);
       } else {
         callback(docs);
       }
@@ -187,8 +189,8 @@ function getHistoryDocuments(last_updated, minutes, callback) {
   });
 }
 
-function getHistoryLastDocument(collection, callback) {
-  const lastDoc = collection.find().sort({_id:-1}).limit(1).toArray((err, docs) => {
+function getHistoryLastDocument(collection, options, callback) {
+  collection.find().sort({_id:-1}).limit(options.limit).toArray((err, docs) => {
     callback(docs);
   });
 }
