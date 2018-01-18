@@ -78,7 +78,7 @@ function makeTimingLabels() {
       id: element,
       label: makeLabel(element),
       shortLabel: makeLabelShort(element),
-      visible: element > 1440 ? false : true
+      visible: (element === 540 || element === 1080 || element > 1440) ? false : true
     }
 
     timing.push(item);
