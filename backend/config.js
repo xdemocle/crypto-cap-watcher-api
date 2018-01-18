@@ -14,7 +14,7 @@ const collections = {
 
 const coinmarketcapUrl = 'https://api.coinmarketcap.com/v1/global/';
 
-const timing = [5, 15, 30, 60, 180, 360, 540, 720, 1440, 2880, 4320, 10080];
+const timing = [5, 15, 30, 60, 180, 360, 540, 720, 1080, 1440, 2880, 4320, 10080, 14400, 20160, 40320];
 
 module.exports = {
   dbOpts,
