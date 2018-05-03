@@ -12,7 +12,8 @@ function retrieveData() {
     });
 
     res.on('end', () => {
-      const response = JSON.parse(body);
+      const responseRAW = JSON.parse(body);
+      const response = handleResponse(responseRAW);
       localData.updateData(response);
       console.log('Got a response: Last Updated', response.last_updated);
     });
@@ -22,6 +23,17 @@ function retrieveData() {
       retrieveData();
     });
   });
+}
+
+function handleResponse(response) {
+  return {
+    "total_market_cap_usd": response.data.quotes.USD.total_market_cap,
+    "total_24h_volume_usd": response.data.quotes.USD.total_volume_24h,
+    "bitcoin_percentage_of_market_cap": response.data.bitcoin_percentage_of_market_cap,
+    "active_currencies": response.data.active_cryptocurrencies,
+    "active_markets": response.data.active_markets,
+    "last_updated": response.data.last_updated
+  };
 }
 
 function start() {
