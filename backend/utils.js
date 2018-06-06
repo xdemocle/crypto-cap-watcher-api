@@ -24,35 +24,15 @@ function ping(host, callback) {
 
 function makeLabel(element) {
 
-  let chunks = ['Changes ('];
-
-  if (element === 60) {
-    chunks.push(1);
-    chunks.push(' Hour)');
-  } else if (element > 10080) {
-    chunks.push(element / 60 / 24 / 7);
-    chunks.push(' Weeks)');
-  } else if (element > 1440) {
-    chunks.push(element / 60 / 24);
-    chunks.push(' Days)');
-  } else if (element >= 120) {
-    chunks.push(element / 60);
-    chunks.push(' Hours)');
-  } else {
-    chunks.push(element);
-    chunks.push(' Minutes)');
-  }
-
-  return chunks.join('');
-}
-
-function makeLabelShort(element) {
-
   let chunks = [];
 
   if (element === 60) {
     chunks.push(1);
     chunks.push(' Hour');
+  } else if (element >= 40320) {
+    const m = element / 60 / 24 / 7 / 4;
+    chunks.push(m);
+    chunks.push(m === 1 ? ' Month' : ' Months');
   } else if (element > 10080) {
     chunks.push(element / 60 / 24 / 7);
     chunks.push(' Weeks');
@@ -77,7 +57,6 @@ function makeTimingLabels() {
     const item = {
       id: element,
       label: makeLabel(element),
-      shortLabel: makeLabelShort(element),
       visible: (element === 540 || element === 1080 || element > 1440) ? false : true
     }
 
