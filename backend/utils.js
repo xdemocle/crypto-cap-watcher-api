@@ -99,9 +99,14 @@ function roundNumber(num, dec) {
   return Math.round(num*Math.pow(10,dec))/Math.pow(10,dec);;
 }
 
+function calculateEthereumPercentageOfMarketCap(ethereumMarketCap, totalMarketCap) {
+  return roundNumber(ethereumMarketCap / totalMarketCap * 100, 2);
+}
+
 module.exports = {
   calculateArrow,
   calculatePercetual,
+  calculateEthereumPercentageOfMarketCap,
   makeLabel,
   makeTimingLabels,
   ping,

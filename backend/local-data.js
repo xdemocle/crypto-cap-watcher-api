@@ -16,6 +16,7 @@ function makeSchema(response, callback) {
         total_market_cap: response.total_market_cap_usd,
         total_24h_volume: response.total_24h_volume_usd,
         bitcoin_percentage: response.bitcoin_percentage_of_market_cap,
+        ethereum_percentage: response.ethereum_percentage_of_market_cap,
         active_currencies: response.active_currencies,
         active_assets: response.active_assets,
         active_markets: response.active_markets,
@@ -55,7 +56,11 @@ function makeHistoryWrapper(response) {
 
           bitcoin_percentage: averages.bitcoin_percentage,
           bitcoin_percentage_arrow: averages.bitcoin_percentage_arrow,
-          bitcoin_percentage_perc: averages.bitcoin_percentage_perc
+          bitcoin_percentage_perc: averages.bitcoin_percentage_perc,
+
+          ethereum_percentage: averages.ethereum_percentage,
+          ethereum_percentage_arrow: averages.ethereum_percentage_arrow,
+          ethereum_percentage_perc: averages.ethereum_percentage_perc
         }
 
         history.push(newStat);
@@ -84,21 +89,25 @@ function calculateAverages(lastDoc, docsHistory) {
     averages.total_market_cap += item.total_market_cap_usd;
     averages.total_24h_volume += item.total_24h_volume_usd;
     averages.bitcoin_percentage += item.bitcoin_percentage_of_market_cap;
+    averages.ethereum_percentage += item.ethereum_percentage_of_market_cap;
   });
 
   averages.total_market_cap = averages.total_market_cap / countImports;
   averages.total_24h_volume = averages.total_24h_volume / countImports;
   averages.bitcoin_percentage = utils.roundNumber(averages.bitcoin_percentage / countImports, 3);
+  averages.ethereum_percentage = utils.roundNumber(averages.ethereum_percentage / countImports, 3);
 
   // Calculate percentuals
   averages.total_market_cap_perc = utils.calculatePercetual(lastDoc.total_market_cap_usd, averages.total_market_cap, 3);
   averages.total_24h_volume_perc = utils.calculatePercetual(lastDoc.total_24h_volume_usd, averages.total_24h_volume, 3);
   averages.bitcoin_percentage_perc = utils.calculatePercetual(lastDoc.bitcoin_percentage_of_market_cap, averages.bitcoin_percentage, 2);
+  averages.ethereum_percentage_perc = utils.calculatePercetual(lastDoc.ethereum_percentage_of_market_cap, averages.ethereum_percentage, 2);
 
   // Calculate arrows
   averages.total_market_cap_arrow = utils.calculateArrow(lastDoc.total_market_cap_usd, averages.total_market_cap);
   averages.total_24h_volume_arrow = utils.calculateArrow(lastDoc.total_24h_volume_usd, averages.total_24h_volume);
   averages.bitcoin_percentage_arrow = utils.calculateArrow(lastDoc.bitcoin_percentage_of_market_cap, averages.bitcoin_percentage);
+  averages.ethereum_percentage_arrow = utils.calculateArrow(lastDoc.ethereum_percentage_of_market_cap, averages.ethereum_percentage);
 
   return averages;
 }
