@@ -47,6 +47,7 @@ function getContent(url) {
     port: config.coinmarketcap.port,
     path: url,
     method: 'GET',
+    family: 4,
     json: true,
     body: undefined,
     headers: {
