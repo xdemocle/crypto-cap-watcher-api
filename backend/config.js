@@ -12,9 +12,12 @@ const collections = {
   history: 'history'
 };
 
-const coinmarketcapUrls = {
-  global: 'https://api.coinmarketcap.com/v2/global/',
-  ethereum: 'https://api.coinmarketcap.com/v2/ticker/1027/'
+const coinmarketcap = {
+  hostname: 'https://pro-api.coinmarketcap.com',
+  port: 443,
+  apikey: process.env.CCC_API_KEY,
+  globalPath: '/v1/cryptocurrency/listings/latest?start=1&limit=1&convert=USD',
+  ethereumPath: '/v1/cryptocurrency/quotes/latest?slug=ethereum'
 };
 
 const timing = [5, 15, 30, 60, 180, 360, 540, 720, 1080, 1440, 2880, 4320,
@@ -25,6 +28,6 @@ module.exports = {
   checkEachMinutes,
   checkEachMinutesClient,
   collections,
-  coinmarketcapUrls,
+  coinmarketcap,
   timing
 };
