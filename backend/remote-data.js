@@ -47,7 +47,6 @@ function getContent(url) {
     port: config.coinmarketcap.port,
     path: url,
     method: 'GET',
-    family: 4,
     json: true,
     body: undefined,
     headers: {
@@ -74,7 +73,7 @@ function getContent(url) {
     });
 
     // handle connection errors of the request
-    request.on("error", (err) => console.log(err));
+    // request.on("error", (err) => console.log(err));
   });
 }
 
