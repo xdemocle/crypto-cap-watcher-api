@@ -13,7 +13,7 @@ const collections = {
 };
 
 const coinmarketcap = {
-  hostname: 'https://pro-api.coinmarketcap.com',
+  hostname: 'pro-api.coinmarketcap.com',
   port: 443,
   apikey: process.env.CCC_API_KEY,
   globalPath: '/v1/cryptocurrency/listings/latest?start=1&limit=1&convert=USD',
