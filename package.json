@@ -8,9 +8,9 @@
     "debug": "node --nolazy --inspect-brk=9229 server.js"
   },
   "dependencies": {
-    "@hapi/hapi": "^20.0.3",
+    "hapi": "^17.2.0",
+    "hapi-mongodb": "^7.1.0",
     "boom": "^7.3.0",
-    "hapi-mongodb": "^9.0.2",
     "lodash": "^4.17.20",
     "ping": "^0.3.0",
     "promise": "^8.1.0",

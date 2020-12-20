@@ -3,6 +3,9 @@ const dbOpts = {
   url:
     process.env.MONGODB_URI ||
     "mongodb://localhost:27017/crypto-cap-watcher-db",
+  settings: {
+    useUnifiedTopology: true,
+  },
   decorate: true,
 };
 

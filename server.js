@@ -1,4 +1,4 @@
-const Hapi = require("@hapi/hapi");
+const Hapi = require("hapi");
 const hapiMongodb = require("hapi-mongodb");
 const Boom = require("boom");
 const config = require("./backend/config");

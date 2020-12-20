@@ -1,11 +1,11 @@
-const https = require('https');
-const MongoClient = require('mongodb').MongoClient;
-const _ = require('lodash');
-const assert = require('assert');
-const Promise = require('promise');
-const config = require('./config');
-const utils = require('./utils');
-const database = require('./database');
+const https = require("https");
+const MongoClient = require("mongodb").MongoClient;
+const _ = require("lodash");
+const assert = require("assert");
+const Promise = require("promise");
+const config = require("./config");
+const utils = require("./utils");
+const database = require("./database");
 
 function makeSchema(response, callback) {
   return new Promise(function (resolve, reject) {
@@ -20,7 +20,7 @@ function makeSchema(response, callback) {
         active_currencies: response.active_currencies,
         active_assets: response.active_assets,
         active_markets: response.active_markets,
-        history: newHistoryWrapper
+        history: newHistoryWrapper,
       };
 
       resolve(mainObject);
@@ -32,14 +32,11 @@ function makeHistoryWrapper(response) {
   const history = [];
 
   return new Promise(function (resolve, reject) {
-
     const countTimings = config.timing.length;
     let pointer = 1;
 
     _.each(config.timing, (timing, index) => {
-
       getHistoryDocuments(response.last_updated, timing, (docs) => {
-
         const averages = calculateAverages(response, docs);
 
         // TODO: calculate averages
@@ -60,8 +57,8 @@ function makeHistoryWrapper(response) {
 
           ethereum_percentage: averages.ethereum_percentage,
           ethereum_percentage_arrow: averages.ethereum_percentage_arrow,
-          ethereum_percentage_perc: averages.ethereum_percentage_perc
-        }
+          ethereum_percentage_perc: averages.ethereum_percentage_perc,
+        };
 
         history.push(newStat);
 
@@ -76,14 +73,13 @@ function makeHistoryWrapper(response) {
 }
 
 function calculateAverages(lastDoc, docsHistory) {
-
   let averages = {
     total_market_cap: 0,
     total_24h_volume: 0,
-    bitcoin_percentage: 0
+    bitcoin_percentage: 0,
   };
 
-  const countImports = docsHistory.length;
+  const countImports = docsHistory && docsHistory.length;
 
   _.each(docsHistory, (item) => {
     averages.total_market_cap += item.total_market_cap_usd;
@@ -94,20 +90,54 @@ function calculateAverages(lastDoc, docsHistory) {
 
   averages.total_market_cap = averages.total_market_cap / countImports;
   averages.total_24h_volume = averages.total_24h_volume / countImports;
-  averages.bitcoin_percentage = utils.roundNumber(averages.bitcoin_percentage / countImports, 3);
-  averages.ethereum_percentage = utils.roundNumber(averages.ethereum_percentage / countImports, 3);
+  averages.bitcoin_percentage = utils.roundNumber(
+    averages.bitcoin_percentage / countImports,
+    3
+  );
+  averages.ethereum_percentage = utils.roundNumber(
+    averages.ethereum_percentage / countImports,
+    3
+  );
 
   // Calculate percentuals
-  averages.total_market_cap_perc = utils.calculatePercetual(lastDoc.total_market_cap_usd, averages.total_market_cap, 3);
-  averages.total_24h_volume_perc = utils.calculatePercetual(lastDoc.total_24h_volume_usd, averages.total_24h_volume, 3);
-  averages.bitcoin_percentage_perc = utils.calculatePercetual(lastDoc.bitcoin_percentage_of_market_cap, averages.bitcoin_percentage, 2);
-  averages.ethereum_percentage_perc = utils.calculatePercetual(lastDoc.ethereum_percentage_of_market_cap, averages.ethereum_percentage, 2);
+  averages.total_market_cap_perc = utils.calculatePercetual(
+    lastDoc.total_market_cap_usd,
+    averages.total_market_cap,
+    3
+  );
+  averages.total_24h_volume_perc = utils.calculatePercetual(
+    lastDoc.total_24h_volume_usd,
+    averages.total_24h_volume,
+    3
+  );
+  averages.bitcoin_percentage_perc = utils.calculatePercetual(
+    lastDoc.bitcoin_percentage_of_market_cap,
+    averages.bitcoin_percentage,
+    2
+  );
+  averages.ethereum_percentage_perc = utils.calculatePercetual(
+    lastDoc.ethereum_percentage_of_market_cap,
+    averages.ethereum_percentage,
+    2
+  );
 
   // Calculate arrows
-  averages.total_market_cap_arrow = utils.calculateArrow(lastDoc.total_market_cap_usd, averages.total_market_cap);
-  averages.total_24h_volume_arrow = utils.calculateArrow(lastDoc.total_24h_volume_usd, averages.total_24h_volume);
-  averages.bitcoin_percentage_arrow = utils.calculateArrow(lastDoc.bitcoin_percentage_of_market_cap, averages.bitcoin_percentage);
-  averages.ethereum_percentage_arrow = utils.calculateArrow(lastDoc.ethereum_percentage_of_market_cap, averages.ethereum_percentage);
+  averages.total_market_cap_arrow = utils.calculateArrow(
+    lastDoc.total_market_cap_usd,
+    averages.total_market_cap
+  );
+  averages.total_24h_volume_arrow = utils.calculateArrow(
+    lastDoc.total_24h_volume_usd,
+    averages.total_24h_volume
+  );
+  averages.bitcoin_percentage_arrow = utils.calculateArrow(
+    lastDoc.bitcoin_percentage_of_market_cap,
+    averages.bitcoin_percentage
+  );
+  averages.ethereum_percentage_arrow = utils.calculateArrow(
+    lastDoc.ethereum_percentage_of_market_cap,
+    averages.ethereum_percentage
+  );
 
   return averages;
 }
@@ -117,29 +147,31 @@ function findDocumentAndUpdate(db, response, callback) {
   const collection = db.collection(config.collections.statistics);
 
   // Check if last_update item is already present
-  collection.findOne({id: 1}, {}, (err, doc) => {
-    assert.equal(null, err);
+  collection.findOne({ id: 1 }, {}, (err, doc) => {
+    assert.strictEqual(null, err);
 
-    if (!doc || (response.last_updated !== doc.last_updated)) {
-      const action = doc ? 'updateOne' : 'insertOne';
+    if (!doc || response.last_updated !== doc.last_updated) {
+      const action = doc ? "updateOne" : "insertOne";
       const logCallback = (err, dbAnswer) => {
-        assert.equal(null, err);
-        console.log('Statistics query executed:', dbAnswer.result);
+        assert.strictEqual(null, err);
+        console.log("Statistics query executed:", dbAnswer.result);
       };
 
       makeSchema(response).then((newObject) => {
-        if (action === 'insertOne') {
+        if (action === "insertOne") {
           // Insert the stat document
           collection.insertOne(newObject, logCallback);
         } else {
           // Update the stat document
-          collection.updateOne({id: 1}, {$set: newObject}, logCallback);
+          collection.updateOne({ id: 1 }, { $set: newObject }, logCallback);
         }
         callback();
       });
     } else {
       callback();
-      console.log('Statistics query NOT executed: last_updated is the most recent');
+      console.log(
+        "Statistics query NOT executed: last_updated is the most recent"
+      );
     }
   });
 }
@@ -149,19 +181,23 @@ function saveNewHistoryDocument(db, response) {
   const collection = db.collection(config.collections.history);
 
   // Check if last_update item is already present
-  collection.findOne({last_updated: response.last_updated}, {}, (err, doc) => {
-    assert.equal(null, err);
+  collection.findOne(
+    { last_updated: response.last_updated },
+    {},
+    (err, doc) => {
+      assert.strictEqual(null, err);
 
-    if (!doc) {
-      // Insert a document
-      collection.insertOne(response, (err, dbAnswer) => {
-        assert.equal(null, err);
-        console.log('History query executed:', dbAnswer.result);
-      });
-    } else {
-      console.log('History query NOT executed: last_updated already present');
+      if (!doc) {
+        // Insert a document
+        collection.insertOne(response, (err, dbAnswer) => {
+          assert.strictEqual(null, err);
+          console.log("History query executed:", dbAnswer.result);
+        });
+      } else {
+        console.log("History query NOT executed: last_updated already present");
+      }
     }
-  });
+  );
 }
 
 function updateData(response) {
@@ -177,8 +213,8 @@ function getHistoryDocuments(last_updated, minutes, callback) {
   // Query for minutes ago (from now)
   const query = {
     last_updated: {
-      $gte: last_updated - 60 * minutes
-    }
+      $gte: last_updated - 60 * minutes,
+    },
   };
 
   const limit = minutes > 30 ? 2 : 1;
@@ -188,22 +224,29 @@ function getHistoryDocuments(last_updated, minutes, callback) {
     // Get the documents collection
     const collection = db.collection(config.collections.history);
 
-    collection.find(query).limit(limit).toArray((err, docs) => {
-      if (!docs.length && minutes === 5) {
-        getHistoryLastDocument(collection, {limit: 1}, callback);
-      } else {
-        callback(docs);
-      }
-    });
+    collection
+      .find(query)
+      .limit(limit)
+      .toArray((err, docs) => {
+        if ((!docs || !docs.length) && minutes === 5) {
+          getHistoryLastDocument(collection, { limit: 1 }, callback);
+        } else {
+          callback(docs);
+        }
+      });
   });
 }
 
 function getHistoryLastDocument(collection, options, callback) {
-  collection.find().sort({_id:-1}).limit(options.limit).toArray((err, docs) => {
-    callback(docs);
-  });
+  collection
+    .find()
+    .sort({ _id: -1 })
+    .limit(options.limit)
+    .toArray((err, docs) => {
+      callback(docs);
+    });
 }
 
 module.exports = {
-  updateData
+  updateData,
 };
