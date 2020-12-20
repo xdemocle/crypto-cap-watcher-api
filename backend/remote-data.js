@@ -1,4 +1,5 @@
 const https = require("https");
+const rp = require("request-promise");
 const config = require("./config");
 const localData = require("./local-data");
 const utils = require("./utils");
@@ -10,22 +11,26 @@ function combinedRemoteCalls() {
   const globalResponse = getContent(config.coinmarketcap.globalPath);
   const ethereumResponse = getContent(config.coinmarketcap.ethereumPath);
 
-  Promise.all([globalResponse, ethereumResponse]).then((res) => {
-    const mainResponse = JSON.parse(res[0]);
-    const ethereumResponse = JSON.parse(res[1]);
+  Promise.all([globalResponse, ethereumResponse])
+    .then((res) => {
+      const mainResponse = JSON.parse(res[0]);
+      const ethereumResponse = JSON.parse(res[1]);
 
-    mainResponse.data.ethereum_market_cap =
-      ethereumResponse.data['1027'].quotes.USD.market_cap;
+      mainResponse.data.ethereum_market_cap =
+        ethereumResponse.data["1027"].quotes.USD.market_cap;
 
-    const combinedResponse = handleCombinedResponse(mainResponse);
+      const combinedResponse = handleCombinedResponse(mainResponse);
 
-    localData.updateData(combinedResponse);
+      localData.updateData(combinedResponse);
 
-    console.log("Got a response: Last Updated", combinedResponse.last_updated);
-  })
-  .catch((err) => {
-    console.log(err)
-  })
+      console.log(
+        "Got a response: Last Updated",
+        combinedResponse.last_updated
+      );
+    })
+    .catch((err) => {
+      console.log(err);
+    });
 }
 
 function handleCombinedResponse(response) {
@@ -44,43 +49,27 @@ function handleCombinedResponse(response) {
   };
 }
 
-function getContent(url) {
-  const options = {
-    hostname: config.coinmarketcap.hostname,
-    port: config.coinmarketcap.port,
-    path: url,
-    method: 'GET',
-    // json: true,
-    // body: undefined,
+async function getContent(url) {
+  const requestOptions = {
+    method: "GET",
+    uri: url,
+    qs: {
+      start: "1",
+      limit: "1",
+      convert: "USD",
+    },
     headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-      'X-CMC_PRO_API_KEY': config.coinmarketcap.apikey
-    }
-  }
+      "X-CMC_PRO_API_KEY": config.coinmarketcap.apikey,
+    },
+    json: true,
+    gzip: true,
+  };
 
-  // return new pending promise
-  return new Promise((resolve, reject) => {
-    const request = https.request(options, (response) => {
-      response.setEncoding('utf8');
+  const response = await rp(requestOptions);
 
-      // handle http errors
-      if (response.statusCode < 200 || response.statusCode > 299) {
-        reject(
-          new Error("Failed to load page, status code: " + response.statusCode)
-        );
-      }
-      // temporary data holder
-      const body = [];
-      // on every content chunk, push it to the data array
-      response.on("data", (chunk) => body.push(chunk));
-      // we are done, resolve promise with those joined chunks
-      response.on("end", () => resolve(body.join("")));
-    });
+  console.log("API call response:", response);
 
-    // handle connection errors of the request
-    request.on("error", (err) => console.log(err));
-  });
+  return response;
 }
 
 function start() {
