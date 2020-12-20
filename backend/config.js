@@ -15,7 +15,7 @@ const collections = {
 const coinmarketcap = {
   hostname: 'pro-api.coinmarketcap.com',
   port: 443,
-  apikey: process.env.CCC_API_KEY,
+  apikey: process.env.CCC_API_KEY | 'fa3849ba-624d-4924-aba3-b028d1b12740',
   globalPath: '/v1/cryptocurrency/listings/latest?start=1&limit=1&convert=USD',
   ethereumPath: '/v1/cryptocurrency/quotes/latest?slug=ethereum'
 };

@@ -22,7 +22,10 @@ function combinedRemoteCalls() {
     localData.updateData(combinedResponse);
 
     console.log("Got a response: Last Updated", combinedResponse.last_updated);
-  });
+  })
+  .catch((err) => {
+    console.log(err)
+  })
 }
 
 function handleCombinedResponse(response) {
@@ -47,10 +50,11 @@ function getContent(url) {
     port: config.coinmarketcap.port,
     path: url,
     method: 'GET',
-    json: true,
-    body: undefined,
+    // json: true,
+    // body: undefined,
     headers: {
       'Accept': 'application/json',
+      'Content-Type': 'application/json',
       'X-CMC_PRO_API_KEY': config.coinmarketcap.apikey
     }
   }
@@ -58,6 +62,8 @@ function getContent(url) {
   // return new pending promise
   return new Promise((resolve, reject) => {
     const request = https.request(options, (response) => {
+      response.setEncoding('utf8');
+
       // handle http errors
       if (response.statusCode < 200 || response.statusCode > 299) {
         reject(
@@ -73,7 +79,7 @@ function getContent(url) {
     });
 
     // handle connection errors of the request
-    // request.on("error", (err) => console.log(err));
+    request.on("error", (err) => console.log(err));
   });
 }
 
