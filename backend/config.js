@@ -18,8 +18,6 @@ const collections = {
 };
 
 const coinmarketcap = {
-  hostname: "pro-api.coinmarketcap.com",
-  port: 443,
   apikey: process.env.CCC_API_KEY || "fa3849ba-624d-4924-aba3-b028d1b12740",
   quotesLatestPath:
     "https://pro-api.coinmarketcap.com/v1/global-metrics/quotes/latest",

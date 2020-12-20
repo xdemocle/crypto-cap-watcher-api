@@ -144,7 +144,9 @@ function calculateAverages(lastDoc, docsHistory) {
 
 function findDocumentAndUpdate(db, response, callback) {
   // Get the documents collection
-  const collection = db.collection(config.collections.statistics);
+  const collection = db
+    .db("crypto-cap-watcher-db")
+    .collection(config.collections.statistics);
 
   // Check if last_update item is already present
   collection.findOne({ id: 1 }, {}, (err, doc) => {

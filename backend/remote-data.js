@@ -7,25 +7,16 @@ const utils = require("./utils");
 /**
  * TODO: adding error handler
  */
-function combinedRemoteCalls() {
-  const quotesLatestPath = getContent(config.coinmarketcap.quotesLatestPath);
+async function combinedRemoteCalls() {
+  const quotesLatestPath = await getContent(
+    config.coinmarketcap.quotesLatestPath
+  );
 
-  Promise.all([quotesLatestPath])
-    .then((res) => {
-      const quotesLatestPath = res[0];
+  const combinedResponse = handleCombinedResponse(quotesLatestPath);
 
-      const combinedResponse = handleCombinedResponse(quotesLatestPath);
+  localData.updateData(combinedResponse);
 
-      localData.updateData(combinedResponse);
-
-      console.log(
-        "Got a response: Last Updated",
-        combinedResponse.last_updated
-      );
-    })
-    .catch((err) => {
-      console.log(err);
-    });
+  console.log("Got a response: Last Updated", combinedResponse.last_updated);
 }
 
 function handleCombinedResponse(response) {

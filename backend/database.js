@@ -17,7 +17,7 @@ exports.connect = function (done) {
       return null;
     }
 
-    state.db = db.db("crypto-cap-watcher-db");
+    state.db = db;
     console.log("Connected successfully to MongoDB server");
     done(db);
 
