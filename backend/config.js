@@ -18,10 +18,8 @@ const coinmarketcap = {
   hostname: "pro-api.coinmarketcap.com",
   port: 443,
   apikey: process.env.CCC_API_KEY || "fa3849ba-624d-4924-aba3-b028d1b12740",
-  globalPath:
-    "https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?start=1&limit=1&convert=USD",
-  ethereumPath:
-    "https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?slug=ethereum",
+  quotesLatestPath:
+    "https://pro-api.coinmarketcap.com/v1/global-metrics/quotes/latest",
 };
 
 const timing = [

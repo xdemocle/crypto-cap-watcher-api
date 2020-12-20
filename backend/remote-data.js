@@ -8,18 +8,13 @@ const utils = require("./utils");
  * TODO: adding error handler
  */
 function combinedRemoteCalls() {
-  const globalResponse = getContent(config.coinmarketcap.globalPath);
-  const ethereumResponse = getContent(config.coinmarketcap.ethereumPath);
+  const quotesLatestPath = getContent(config.coinmarketcap.quotesLatestPath);
 
-  Promise.all([globalResponse, ethereumResponse])
+  Promise.all([quotesLatestPath])
     .then((res) => {
-      const mainResponse = JSON.parse(res[0]);
-      const ethereumResponse = JSON.parse(res[1]);
+      const quotesLatestPath = res[0];
 
-      mainResponse.data.ethereum_market_cap =
-        ethereumResponse.data["1027"].quotes.USD.market_cap;
-
-      const combinedResponse = handleCombinedResponse(mainResponse);
+      const combinedResponse = handleCombinedResponse(quotesLatestPath);
 
       localData.updateData(combinedResponse);
 
@@ -34,17 +29,13 @@ function combinedRemoteCalls() {
 }
 
 function handleCombinedResponse(response) {
+  // console.log(response.data.quote.USD);
   return {
-    total_market_cap_usd: response.data.quotes.USD.total_market_cap,
-    total_24h_volume_usd: response.data.quotes.USD.total_volume_24h,
-    bitcoin_percentage_of_market_cap:
-      response.data.bitcoin_percentage_of_market_cap,
-    ethereum_percentage_of_market_cap: utils.calculateEthereumPercentageOfMarketCap(
-      response.data.ethereum_market_cap,
-      response.data.quotes.USD.total_market_cap
-    ),
-    active_currencies: response.data.active_cryptocurrencies,
-    active_markets: response.data.active_markets,
+    total_market_cap_usd: response.data.quote.USD.total_market_cap,
+    total_24h_volume_usd: response.data.quote.USD.total_volume_24h,
+    bitcoin_percentage_of_market_cap: response.data.btc_dominance,
+    ethereum_percentage_of_market_cap: response.data.eth_dominance,
+    // active_markets: response.data.num_market_pairs,
     last_updated: response.data.last_updated,
   };
 }
