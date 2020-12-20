@@ -53,11 +53,11 @@ async function getContent(url) {
   const requestOptions = {
     method: "GET",
     uri: url,
-    qs: {
-      start: "1",
-      limit: "1",
-      convert: "USD",
-    },
+    // qs: {
+    //   start: "1",
+    //   limit: "1",
+    //   convert: "USD",
+    // },
     headers: {
       "X-CMC_PRO_API_KEY": config.coinmarketcap.apikey,
     },
